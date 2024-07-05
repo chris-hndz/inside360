@@ -26,10 +26,6 @@
     </style>
 </head>
 <body>
-    <!-- <div id="info">
-        Rotación de la cámara: <span id="cameraRotation"></span><br>
-        Rotación del dispositivo: <span id="deviceRotation"></span>
-    </div> -->
     <img id="logo" src="images/JW_Logo.svg" alt="Logo">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
@@ -41,6 +37,7 @@
             phi = 0, theta = 0;
         let deviceAlpha = 0, deviceBeta = 0, deviceGamma = 0;
         let alphaOffset = 0;
+        const rotateSpeed = -0.25;
 
         init();
         animate();
@@ -97,15 +94,40 @@
         }
 
         function onDocumentTouchMove(event) {
-            if (event.touches.length == 1) {
+            if (event.touches.length == 1 && isUserInteracting) {
                 event.preventDefault();
-                lon = (onPointerDownMouseX - event.touches[0].pageX) * 0.1 + onPointerDownLon;
-                lat = (event.touches[0].pageY - onPointerDownMouseY) * 0.1 + onPointerDownLat;
+                const touchX = event.touches[0].pageX;
+                const touchY = event.touches[0].pageY;
+                
+                // Calcular el cambio en la posición del toque
+                const deltaX = (touchX - onPointerDownMouseX) * rotateSpeed;
+                const deltaY = (touchY - onPointerDownMouseY) * rotateSpeed;
+                
+                // Actualizar lon y lat
+                lon = onPointerDownLon - deltaX;
+                lat = onPointerDownLat + deltaY;
+                
+                // Limitar lat entre -85 y 85 grados
+                lat = Math.max(-85, Math.min(85, lat));
+                
+                // Actualizar la rotación de la cámara
+                updateCameraRotation();
             }
         }
 
         function onDocumentTouchEnd() {
             isUserInteracting = false;
+        }
+
+        function updateCameraRotation() {
+            phi = THREE.MathUtils.degToRad(90 - lat);
+            theta = THREE.MathUtils.degToRad(lon);
+            
+            camera.position.x = 500 * Math.sin(phi) * Math.cos(theta);
+            camera.position.y = 500 * Math.cos(phi);
+            camera.position.z = 500 * Math.sin(phi) * Math.sin(theta);
+            
+            camera.lookAt(scene.position);
         }
 
         function onDeviceOrientation(event) {
@@ -144,37 +166,11 @@
         }
 
         function update() {
-            if (!isUserInteracting) {
-                renderer.render(scene, camera);
-            } else {
-                lat = Math.max(-85, Math.min(85, lat));
-                phi = THREE.MathUtils.degToRad(90 - lat);
-                theta = THREE.MathUtils.degToRad(lon);
-
-                camera.position.x = 500 * Math.sin(phi) * Math.cos(theta);
-                camera.position.y = 500 * Math.cos(phi);
-                camera.position.z = 500 * Math.sin(phi) * Math.sin(theta);
-                
-                camera.lookAt(scene.position);
+            if (isUserInteracting) {
+                updateCameraRotation();
             }
-            
             renderer.render(scene, camera);
-
-            // updateRotationInfo();
         }
-
-        // function updateRotationInfo() {
-        //     const cameraRotation = document.getElementById('cameraRotation');
-        //     const deviceRotation = document.getElementById('deviceRotation');
-
-        //     // Obtener la rotación de la cámara en grados
-        //     let euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
-        //     let rotationDegrees = euler.toVector3().multiplyScalar(THREE.MathUtils.RAD2DEG);
-        //     cameraRotation.textContent = `X: ${rotationDegrees.x.toFixed(2)}°, Y: ${rotationDegrees.y.toFixed(2)}°, Z: ${rotationDegrees.z.toFixed(2)}°`;
-        
-        //     // Mostrar la rotación del dispositivo
-        //     deviceRotation.textContent = `α: ${deviceAlpha.toFixed(2)}°, β: ${deviceBeta.toFixed(2)}°, γ: ${deviceGamma.toFixed(2)}°`;
-        // }
     </script>
 </body>
 </html>
