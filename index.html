@@ -32,7 +32,7 @@
             const geometry = new THREE.SphereGeometry(500, 60, 40);
             geometry.scale(-1, 1, 1);
 
-            const texture = new THREE.TextureLoader().load('outdoor_umbrellas_4k.jpg');
+            const texture = new THREE.TextureLoader().load('images/outdoor_umbrellas_4k.jpg');
             const material = new THREE.MeshBasicMaterial({ map: texture });
 
             const mesh = new THREE.Mesh(geometry, material);
@@ -52,6 +52,8 @@
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', onDeviceOrientation, false);
             }
+			
+			camera.rotation.reorder('YXZ');
         }
 
         function onWindowResize() {
@@ -84,11 +86,17 @@
         }
 
         function onDeviceOrientation(event) {
-            if (event.beta !== null && event.gamma !== null) {
-                lat = event.beta;  // -180 to 180
-                lon = event.gamma; // -90 to 90
-            }
-        }
+			if (event.alpha !== null && event.beta !== null && event.gamma !== null) {
+				// Convertir grados a radianes
+				let alpha = THREE.MathUtils.degToRad(event.alpha);
+				let beta = THREE.MathUtils.degToRad(event.beta);
+				let gamma = THREE.MathUtils.degToRad(event.gamma);
+
+				// Calcular la orientación
+				let orientation = new THREE.Euler(beta, alpha, -gamma, 'YXZ');
+				camera.quaternion.setFromEuler(orientation);
+			}
+		}
 
         function animate() {
             requestAnimationFrame(animate);
@@ -96,18 +104,25 @@
         }
 
         function update() {
-            lat = Math.max(-85, Math.min(85, lat));
-            phi = THREE.MathUtils.degToRad(90 - lat);
-            theta = THREE.MathUtils.degToRad(lon);
+			if (!isUserInteracting) {
+				// Si no hay interacción del usuario, usa la orientación del dispositivo
+				renderer.render(scene, camera);
+			} else {
+				// Si hay interacción del usuario, usa el método anterior
+				lat = Math.max(-85, Math.min(85, lat));
+				phi = THREE.MathUtils.degToRad(90 - lat);
+				theta = THREE.MathUtils.degToRad(lon);
 
-            camera.position.x = 500 * Math.sin(phi) * Math.cos(theta);
-            camera.position.y = 500 * Math.cos(phi);
-            camera.position.z = 500 * Math.sin(phi) * Math.sin(theta);
+				camera.position.x = 500 * Math.sin(phi) * Math.cos(theta);
+				camera.position.y = 500 * Math.cos(phi);
+				camera.position.z = 500 * Math.sin(phi) * Math.sin(theta);
+				
+				camera.lookAt(scene.position);
+				
+				renderer.render(scene, camera);
 
-            camera.lookAt(scene.position);
-
-            renderer.render(scene, camera);
-        }
+			}
+		}
     </script>
 </body>
 </html>
