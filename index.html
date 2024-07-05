@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Tour Virtual 360°</title>
+    <!-- Añadimos el favicon aquí -->
+    <link rel="icon" type="image/svg+xml" href="images/JW_Logo.svg">
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { width: 100%; height: 100% }
@@ -22,11 +24,46 @@
             left: 10px;
             width: 15%;
             height: auto;
+            display: none;
+        }
+        #loadingBar {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        #loadingProgress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s;
+        }
+        #loadingText {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-family: Arial, sans-serif;
         }
     </style>
 </head>
+</html>
 <body>
-    <img id="logo" src="images/JW_Logo.svg" alt="Logo">
+    <img id="logo" src="images/JW_Logo.svg" alt="Logo" style="display: none;">
+    <div id="loadingBar">
+        <div id="loadingProgress"></div>
+        <div id="loadingText">0%</div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let camera, scene, renderer;
@@ -39,40 +76,33 @@
         let alphaOffset = 0;
         const rotateSpeed = -0.25;
 
-        init();
-        animate();
-
         function init() {
             const container = document.body;
-
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1100);
             
-            // Inicializar la rotación de la cámara a [0°, 90°, 0°]
             camera.rotation.set(0, Math.PI/2, 0, 'YXZ');
             
-            // Inicializar lon y lat
             lon = 0;
             lat = 0;
 
             scene = new THREE.Scene();
-
-            const geometry = new THREE.SphereGeometry(500, 60, 40);
-            geometry.scale(-1, 1, 1);
-
-            const texture = new THREE.TextureLoader().load('images/outdoor_umbrellas_4k.jpg');
-            const material = new THREE.MeshBasicMaterial({ map: texture });
-
-            const mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-
+            
+            // Inicializar el renderer aquí
             renderer = new THREE.WebGLRenderer();
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
 
+            const geometry = new THREE.SphereGeometry(500, 60, 40);
+            geometry.scale(-1, 1, 1);
+
+            // Asegúrate de que la barra de carga sea visible
+            document.getElementById('loadingBar').style.display = 'block';
+
+            loadTexture(geometry, container);
+
             container.style.touchAction = 'none';
             container.addEventListener('pointerdown', onPointerDown);
-
             window.addEventListener('resize', onWindowResize, false);
 
             if (window.DeviceOrientationEvent) {
@@ -81,9 +111,68 @@
             
             camera.rotation.reorder('YXZ');
             
-            // Actualizar la rotación de la cámara inicialmente
             updateCameraRotation();
         }
+
+        function loadTexture(geometry, container) {
+			const loadingProgressElement = document.getElementById('loadingProgress');
+			const loadingTextElement = document.getElementById('loadingText');
+
+			// Usar XMLHttpRequest en lugar de TextureLoader
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', 'images/outdoor_umbrellas_4k.jpg', true);
+			xhr.responseType = 'blob';
+
+			xhr.onprogress = function(event) {
+				if (event.lengthComputable) {
+					const percentComplete = (event.loaded / event.total) * 100;
+					console.log(percentComplete + '% loaded');
+					
+					loadingProgressElement.style.width = percentComplete + '%';
+					loadingTextElement.textContent = Math.round(percentComplete) + '%';
+					
+					// Forzar un reflow para asegurar que los cambios se muestren
+					loadingProgressElement.offsetHeight;
+				}
+			};
+
+			xhr.onload = function() {
+				if (xhr.status === 200) {
+					const blob = xhr.response;
+					const textureLoader = new THREE.TextureLoader();
+					const objectURL = URL.createObjectURL(blob);
+					
+					textureLoader.load(
+						objectURL,
+						function(texture) {
+							const material = new THREE.MeshBasicMaterial({ map: texture });
+							const mesh = new THREE.Mesh(geometry, material);
+							scene.add(mesh);
+							
+							// Hide loading bar and show logo
+							document.getElementById('loadingBar').style.display = 'none';
+							document.getElementById('logo').style.display = 'block';
+							
+							// Start rendering
+							animate();
+							
+							// Liberar el objeto URL
+							URL.revokeObjectURL(objectURL);
+						},
+						undefined,
+						function(error) {
+							console.error('Error loading texture', error);
+						}
+					);
+				}
+			};
+
+			xhr.onerror = function() {
+				console.error('Error al cargar la imagen');
+			};
+
+			xhr.send();
+		}
 
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -181,6 +270,8 @@
             }
             renderer.render(scene, camera);
         }
+
+        init();
     </script>
 </body>
 </html>
