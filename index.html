@@ -100,21 +100,31 @@
         }
 
         function onDeviceOrientation(event) {
-            if (event.alpha !== null && event.beta !== null && event.gamma !== null) {
-                deviceAlpha = event.alpha;
-                deviceBeta = event.beta;
-                deviceGamma = event.gamma;
+			if (event.alpha !== null && event.beta !== null && event.gamma !== null) {
+				deviceAlpha = event.alpha;
+				deviceBeta = event.beta;
+				deviceGamma = event.gamma;
 
-                // Convertir grados a radianes
-                let alpha = THREE.MathUtils.degToRad(event.alpha);
-                let beta = THREE.MathUtils.degToRad(event.beta);
-                let gamma = THREE.MathUtils.degToRad(event.gamma);
+				// Convertir grados a radianes
+				let alpha = THREE.MathUtils.degToRad(event.alpha);
+				let beta = THREE.MathUtils.degToRad(event.beta);
+				let gamma = THREE.MathUtils.degToRad(event.gamma);
 
-                // Calcular la orientación
-                let orientation = new THREE.Euler(beta, alpha, -gamma, 'YXZ');
-                camera.quaternion.setFromEuler(orientation);
-            }
-        }
+				// Crear una matriz de rotación basada en la orientación del dispositivo
+				let quaternion = new THREE.Quaternion();
+				let rotationOrder = 'YXZ'; // Este orden de rotación es importante
+
+				// Aplicar las rotaciones en el orden correcto
+				quaternion.setFromEuler(new THREE.Euler(beta, alpha, -gamma, rotationOrder));
+
+				// Aplicar una rotación adicional para alinear los sistemas de coordenadas
+				let correctionQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
+				quaternion.multiply(correctionQuaternion);
+
+				// Aplicar la rotación a la cámara
+				camera.quaternion.copy(quaternion);
+			}
+		}
 
         function animate() {
             requestAnimationFrame(animate);
@@ -145,16 +155,17 @@
         }
 
         function updateRotationInfo() {
-            const cameraRotation = document.getElementById('cameraRotation');
-            const deviceRotation = document.getElementById('deviceRotation');
+			const cameraRotation = document.getElementById('cameraRotation');
+			const deviceRotation = document.getElementById('deviceRotation');
 
-            // Obtener la rotación de la cámara en grados
-            const rotationDegrees = camera.rotation.toVector3().multiplyScalar(THREE.MathUtils.RAD2DEG);
-            cameraRotation.textContent = `X: ${rotationDegrees.x.toFixed(2)}°, Y: ${rotationDegrees.y.toFixed(2)}°, Z: ${rotationDegrees.z.toFixed(2)}°`;
+			// Obtener la rotación de la cámara en grados
+			let euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
+			let rotationDegrees = euler.toVector3().multiplyScalar(THREE.MathUtils.RAD2DEG);
+			cameraRotation.textContent = `X: ${rotationDegrees.x.toFixed(2)}°, Y: ${rotationDegrees.y.toFixed(2)}°, Z: ${rotationDegrees.z.toFixed(2)}°`;
 
-            // Mostrar la rotación del dispositivo
-            deviceRotation.textContent = `α: ${deviceAlpha.toFixed(2)}°, β: ${deviceBeta.toFixed(2)}°, γ: ${deviceGamma.toFixed(2)}°`;
-        }
+			// Mostrar la rotación del dispositivo
+			deviceRotation.textContent = `α: ${deviceAlpha.toFixed(2)}°, β: ${deviceBeta.toFixed(2)}°, γ: ${deviceGamma.toFixed(2)}°`;
+		}
     </script>
 </body>
 </html>
