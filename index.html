@@ -16,13 +16,21 @@
             padding: 10px;
             font-family: Arial, sans-serif;
         }
+        #logo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 15%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
     <!-- <div id="info">
-		Rotación de la cámara: <span id="cameraRotation"></span><br>
-		Rotación del dispositivo: <span id="deviceRotation"></span>
-	</div> -->
+        Rotación de la cámara: <span id="cameraRotation"></span><br>
+        Rotación del dispositivo: <span id="deviceRotation"></span>
+    </div> -->
+    <img id="logo" src="images/JW_Logo.svg" alt="Logo">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let camera, scene, renderer;
@@ -159,12 +167,12 @@
         //     const cameraRotation = document.getElementById('cameraRotation');
         //     const deviceRotation = document.getElementById('deviceRotation');
 
-		//     // Obtener la rotación de la cámara en grados
+        //     // Obtener la rotación de la cámara en grados
         //     let euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
         //     let rotationDegrees = euler.toVector3().multiplyScalar(THREE.MathUtils.RAD2DEG);
         //     cameraRotation.textContent = `X: ${rotationDegrees.x.toFixed(2)}°, Y: ${rotationDegrees.y.toFixed(2)}°, Z: ${rotationDegrees.z.toFixed(2)}°`;
-		
-		//     // Mostrar la rotación del dispositivo
+        
+        //     // Mostrar la rotación del dispositivo
         //     deviceRotation.textContent = `α: ${deviceAlpha.toFixed(2)}°, β: ${deviceBeta.toFixed(2)}°, γ: ${deviceGamma.toFixed(2)}°`;
         // }
     </script>
