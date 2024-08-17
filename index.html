@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Tour Virtual 360°</title>
     <!-- Añadimos el favicon aquí -->
-    <link rel="icon" type="image/svg+xml" href="images/JW_Logo.svg">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { width: 100%; height: 100% }
@@ -19,11 +19,11 @@
             font-family: Arial, sans-serif;
         }
 		#logo {
-			position: absolute;
+			position: fixed;
 			top: 10px;
 			left: 10px;
-			max-width: 15%;
-			max-height: 15%;
+			max-width: 25%;
+			max-height: 25%;
 			display: none;
 		}
         #loadingBar {
@@ -59,7 +59,7 @@
 </head>
 </html>
 <body>
-    <img id="logo" src="images/JW_Logo.svg" alt="Logo" style="display: none;">
+    <img id="logo" src="images/logo.svg" alt="Logo" style="display: none;">
     <div id="loadingBar">
         <div id="loadingProgress"></div>
         <div id="loadingText">0%</div>
@@ -202,12 +202,12 @@
 			const logo = document.getElementById('logo');
 			if (window.innerWidth < window.innerHeight) {
 				// Pantalla vertical
-				logo.style.width = '15vw';
+				logo.style.width = '25vw';
 				logo.style.height = 'auto';
 			} else {
 				// Pantalla horizontal
 				logo.style.width = 'auto';
-				logo.style.height = '15vh';
+				logo.style.height = '25vh';
 			}
 		}
 
